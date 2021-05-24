@@ -1,4 +1,3 @@
-from urllib.request import urlretrieve as download_from_url
 from os.path import isfile as is_file
 from os.path import isdir as is_dir
 from os.path import join as path_join
@@ -13,36 +12,25 @@ db_dir = "/home/suaj/Programs/TF2MTK/src/database/"
 
 
 class Mod:
-    def __init__(self, filename, dl_url=None):
+    def __init__(self, filename):
         if filename[-4:] != ".vpk":
             raise NotAVPKException
         else:
             self.filename = filename
-        self.dl_url = dl_url
         self.path = path_join(db_dir, self.filename)
 
-    def download(self):
-        if self.dl_url is None:
-            raise DownloadURLNotProvidedException
-        if self.is_downloaded():
-            raise AlreadyDownloadedException
-        else:
-            download_from_url(self.dl_url, self.path)
-
-    def delete(self):
+    def set_filename(self, filename):
         if self.is_active():
             raise IsActiveException
-        if not self.is_downloaded():
-            raise NotDownloadedException
+        if not self.is_packed():
+            raise IsPackedException
+        if filename[-4:] != ".vpk":
+            raise NotAVPKException
         else:
-            os.remove(self.path)
-        self.path = None
-
-    def is_downloaded(self):
-        if is_dir(self.path) or is_file(self.path):
-            return True
-        else:
-            return False
+            self.filename = filename
+            new_path = path_join(db_dir, self.filename)
+            os.rename(self.path, new_path)
+            self.path = new_path
 
     def pack(self):
         if self.is_packed():
@@ -104,8 +92,6 @@ class Mod:
             return False
 
     def get_internal_files(self):
-        if not self.is_downloaded():
-            raise NotDownloadedException
         if self.is_packed():
             raise IsPackedException
         if self.is_active():
@@ -130,6 +116,25 @@ class Mod:
             return True
         else:
             return False
+
+    def merge_with(self, other_mod):
+        if not isinstance(other_mod, Mod):
+            raise NotAModException
+        if self.is_packed() or other_mod.is_packed():
+            raise IsPackedException
+        if self.conflicts_with(other_mod):
+            raise ConflictsWithModException
+        else:
+            dirs_to_copy = (
+                directory
+                for (directory, _, _) in os.walk(other_mod.path)
+            )
+            for directory in dirs_to_copy:
+                shutil.copytree(directory, self.path)
+
+        # After being merged, it should conflict with the other mod
+        if not self.conflicts_with(other_mod):
+            raise CouldNotMergeException
 
 
 class NotAVPKException(Exception):
@@ -173,4 +178,12 @@ class CouldNotUnpackException(Exception):
 
 
 class NotAModException(Exception):
+    pass
+
+
+class ConflictsWithModException(Exception):
+    pass
+
+
+class CouldNotMergeException(Exception):
     pass
