@@ -137,53 +137,22 @@ class Mod:
             raise CouldNotMergeException
 
 
-class NotAVPKException(Exception):
-    pass
+class NotAVPKException(Exception): pass
 
+class IsPackedException(Exception): pass
 
-class DownloadURLNotProvidedException(Exception):
-    pass
+class NotPackedException(Exception): pass
 
+class IsActiveException(Exception): pass
 
-class AlreadyDownloadedException(Exception):
-    pass
+class NotActiveException(Exception): pass
 
+class CouldNotPackException(Exception): pass
 
-class NotDownloadedException(Exception):
-    pass
+class CouldNotUnpackException(Exception): pass
 
+class NotAModException(Exception): pass
 
-class IsPackedException(Exception):
-    pass
+class ConflictsWithModException(Exception): pass
 
-
-class NotPackedException(Exception):
-    pass
-
-
-class IsActiveException(Exception):
-    pass
-
-
-class NotActiveException(Exception):
-    pass
-
-
-class CouldNotPackException(Exception):
-    pass
-
-
-class CouldNotUnpackException(Exception):
-    pass
-
-
-class NotAModException(Exception):
-    pass
-
-
-class ConflictsWithModException(Exception):
-    pass
-
-
-class CouldNotMergeException(Exception):
-    pass
+class CouldNotMergeException(Exception): pass
