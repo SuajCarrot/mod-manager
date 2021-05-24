@@ -14,7 +14,10 @@ db_dir = "/home/suaj/Programs/TF2MTK/src/database/"
 
 class Mod:
     def __init__(self, filename, dl_url=None):
-        self.filename = filename
+        if filename[-4:] != ".vpk":
+            raise NotAVPKException
+        else:
+            self.filename = filename
         self.dl_url = dl_url
         self.path = path_join(db_dir, self.filename)
 
@@ -33,7 +36,7 @@ class Mod:
             raise NotDownloadedException
         else:
             os.remove(self.path)
-        self.path = ""
+        self.path = None
 
     def is_downloaded(self):
         if is_dir(self.path) or is_file(self.path):
@@ -49,9 +52,9 @@ class Mod:
             os.system(f": $(\"{vpk_cli}\" \"{self.path}\")")
             shutil.rmtree(self.path)
 
-            self.path += ".vpk"
-            if not is_file(self.path):
-                raise CouldNotPackException
+        self.path += ".vpk"
+        if not is_file(self.path):
+            raise CouldNotPackException
 
     def unpack(self):
         if self.is_active():
@@ -62,17 +65,17 @@ class Mod:
             os.system(f": $(\"{vpk_cli}\" \"{self.path}\")")
             os.remove(self.path)
 
-            # On UNIX, the dot in ".vpk" doesn't get removed after unpacking
-            # a VPK file with the CLI that Valve provides
+        # On UNIX, the dot in ".vpk" doesn't get removed after unpacking
+        # a VPK file with the CLI that Valve provides
 
-            for name in os.listdir(db_dir):
-                if name in self.filename[:-3]:  # Last 3 chars are "vpk"
-                    self.path = path_join(db_dir, name)
-                    os.rename(self.path, self.path[:-1])  # Remove the dot
-                    self.path = self.path[:-1]
-                    break
-            else:
-                raise CouldNotUnpackException
+        if is_dir(self.path[:-4]):  # "file.vpk" -> "file"
+            self.path = self.path[:-4]
+
+        elif is_dir(self.path[:-3]):  # "file.vpk" -> "file."
+            os.rename(self.path[:-3], self.path[:-4])  # "file." -> "file"
+            self.path = self.path[:-4]
+        else:
+            raise CouldNotUnpackException
 
     def is_packed(self):
         if self.path[-4:] == ".vpk":
@@ -89,10 +92,10 @@ class Mod:
             shutil.copy(self.path, path_join(custom_dir, self.filename))
 
     def deactivate(self):
-        if self.is_active():
-            os.remove(path_join(custom_dir, self.filename))
-        else:
+        if not self.is_active():
             raise NotActiveException
+        else:
+            os.remove(path_join(custom_dir, self.filename))
 
     def is_active(self):
         if is_file(path_join(custom_dir, self.filename)):
@@ -101,15 +104,36 @@ class Mod:
             return False
 
     def get_internal_files(self):
+        if not self.is_downloaded():
+            raise NotDownloadedException
         if self.is_packed():
             raise IsPackedException
+        if self.is_active():
+            raise IsActiveException
         else:
             internal_files = tuple((
-                path_join(parent, single_file)
-                for (parent, dirs, files) in os.walk(self.path)
-                for single_file in files
+                files
+                for (_, _, files_lists) in os.walk(self.path)
+                for files in files_lists
             ))
         return internal_files
+
+    def conflicts_with(self, other_mod):
+        if not isinstance(other_mod, Mod):
+            raise NotAModException
+        else:
+            conflicting_files = tuple((
+                filename for filename in self.get_internal_files()
+                if filename in other_mod.get_internal_files()
+            ))
+        if conflicting_files:
+            return True
+        else:
+            return False
+
+
+class NotAVPKException(Exception):
+    pass
 
 
 class DownloadURLNotProvidedException(Exception):
@@ -145,4 +169,8 @@ class CouldNotPackException(Exception):
 
 
 class CouldNotUnpackException(Exception):
+    pass
+
+
+class NotAModException(Exception):
     pass
