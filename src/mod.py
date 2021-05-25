@@ -104,6 +104,16 @@ class Mod:
             ))
         return internal_files
 
+    def works_in_sv_pure(self):
+        if self.is_packed():
+            raise IsPackedException
+        if self.is_active():
+            raise IsActiveException
+        else:
+            subdirs = tuple((parent for (parent, _, _) in os.walk(self.path)))
+
+        # NOTE: CONTINUE THIS
+
     def conflicts_with(self, other_mod):
         if not isinstance(other_mod, Mod):
             raise NotAModException
