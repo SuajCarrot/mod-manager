@@ -3,9 +3,6 @@ from os.path import isdir as is_dir
 from os.path import join as path_join
 import os
 
-custom_dir = ("/home/suaj/.local/share/Steam/steamapps/common/Team Fortress "
-              "2/tf/custom/")
-
 
 def extract_file(file_path):
     if file_path[-4:] != ".rar"\
@@ -44,6 +41,10 @@ def remove_cache_in_custom_dir():
     for filename in os.listdir(custom_dir):
         if filename[-6:] == ".cache":
             os.remove(path_join(custom_dir, filename))
+
+
+custom_dir = path_join(find_team_fortress_2_dir(), "tf/custom")
+
 
 class CouldNotFindDirectoryException(Exception): pass
 
