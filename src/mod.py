@@ -1,13 +1,15 @@
 from os.path import isfile as is_file
 from os.path import isdir as is_dir
 from os.path import join as path_join
+from os.path import sep as dir_sep
 import shutil
 import os
 
-custom_dir = ("/home/suaj/.local/share/Steam/steamapps/common/Team Fortress "
-              "2/tf/custom/")
-vpk_cli = ("/home/suaj/.local/share/Steam/steamapps/common/Team Fortress "
-           "2/bin/vpk")
+import misc
+
+# The database can be whatever directory you want
+custom_dir = path_join(misc.find_team_fortress_2_dir(), "/tf/custom/")
+vpk_cli = path_join(misc.find_team_fortress_2_dir(), "/bin/vpk")
 db_dir = "/home/suaj/Programs/TF2MTK/src/database/"
 
 
@@ -112,7 +114,18 @@ class Mod:
         else:
             subdirs = tuple((parent for (parent, _, _) in os.walk(self.path)))
 
-        # NOTE: CONTINUE THIS
+        for subdir in subdirs:
+            if subdir in (
+                f"materials{dir_sep}console",
+                f"materials{dir_sep}temp",
+                f"materials{dir_sep}vgui{dir_sep}logos{dir_sep}ui",
+                f"sound{dir_sep}misc",
+                f"sound{dir_sep}vo",
+                f"sound{dir_sep}ui",
+            ):
+                return True
+            else:
+                return False
 
     def conflicts_with(self, other_mod):
         if not isinstance(other_mod, Mod):
