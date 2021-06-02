@@ -9,7 +9,7 @@ Un kit de herramientas para modificar Team Fortress 2. No afiliado con Valve Cor
 - Python 3.8.5+
 - 7zip
 
-## Supported Platforms
+## Plataformas Compatibles
 - UNIX y similares (FreeBSD y OpenBSD no probados aún)
 - Microsoft Windows (No probado aún)
 - macOS (No probado aún)
@@ -17,8 +17,8 @@ Un kit de herramientas para modificar Team Fortress 2. No afiliado con Valve Cor
 ## Créditos
 **Suaj**: Creador, módulos, READMEs, traducción al español.
 
-## Contact
+## Contacto
 **Suaj**
 - Github: SuajCarrot *(https://github.com/SuajCarrot/)*
-- Matrix: @suaj *(@suaj:matrix.org)*
+- Matrix: @suaj:matrix.org
 - Discord: suaj\_wasnt\_used#3912

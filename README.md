@@ -20,5 +20,5 @@ A modding toolkit for Team Fortress 2. Not affiliated with Valve Corporation.
 ## Contact
 **Suaj**
 - Github: SuajCarrot *(https://github.com/SuajCarrot/)*
-- Matrix: @suaj *(@suaj:matrix.org)*
+- Matrix: @suaj:matrix.org
 - Discord: suaj\_wasnt\_used#3912
