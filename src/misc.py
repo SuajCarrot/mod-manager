@@ -13,14 +13,6 @@ def extract_file(file_path):
         os.system(f'7z x "{file_path}"')
 
 
-def find_vpks_in_dir(directory):
-    return tuple((
-        path_join(parent, filename)
-        for (parent, dirs, filenames) in os.walk(directory)
-        for filename in filenames if filename[-4:] == ".vpk"
-    ))
-
-
 def find_team_fortress_2_dir():
     steam_dir = "Steam/steamapps/common/Team Fortress 2/"
     for directory in (
@@ -43,9 +35,13 @@ def remove_cache_in_custom_dir():
             os.remove(path_join(custom_dir, filename))
 
 
-custom_dir = path_join(find_team_fortress_2_dir(), "tf/custom")
+class CouldNotFindDirectoryException(Exception):
+    pass
 
 
-class CouldNotFindDirectoryException(Exception): pass
+class CompressionFormatNotSupportedException(Exception):
+    pass
 
-class CompressionFormatNotSupportedException(Exception): pass
+
+if __name__ == "__main__":
+    custom_dir = path_join(find_team_fortress_2_dir(), "tf/custom")

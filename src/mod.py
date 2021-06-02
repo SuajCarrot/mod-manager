@@ -1,7 +1,6 @@
 from os.path import isfile as is_file
 from os.path import isdir as is_dir
 from os.path import join as path_join
-from os.path import sep as dir_sep
 import shutil
 import os
 
@@ -54,7 +53,7 @@ class Mod:
     def pack(self):
 
         """
-        Packs (calls the VPK CLI on a directory) the mod.
+        Calls the VPK CLI on a directory (the mod).
         """
 
         if self.is_packed():
@@ -66,13 +65,13 @@ class Mod:
     def unpack(self):
 
         """
-        Unpacks (calls the VPK CLI on a VPK file) the mod.
+        Calls the VPK CLI on a VPK file (the mod).
         """
 
         if not self.is_packed():
             raise NotPackedException("The mod is already unpacked")
         else:
-            os.system(f": $(\"{vpk_cli_path}\" \"{self.path_as_vpk}\")")
+            os.system(f'"{vpk_cli_path}" "{self.path_as_vpk}"')
             # On UNIX, the dot in ".vpk" doesn't get removed after unpacking
             # a VPK file with the CLI that Valve provides
             if is_dir(self.path_as_dir + "."):
@@ -82,7 +81,7 @@ class Mod:
     def is_active(self):
 
         """
-        Checks if the mod is active (found in the "custom" directory).
+        Checks if the mod is in the game's "custom" directory.
         """
 
         if is_file(self.path_as_active):
@@ -93,7 +92,7 @@ class Mod:
     def activate(self):
 
         """
-        Activates the mod (copies it to the "custom" directory).
+        Copies the mod to the game's "custom" directory.
         """
 
         if self.is_active():
@@ -106,7 +105,7 @@ class Mod:
     def deactivate(self):
 
         """
-        Deactivates the mod (removes it from the "custom" directory").
+        Removes the mod from the game's "custom" directory.
         """
 
         if not self.is_active():
@@ -114,10 +113,10 @@ class Mod:
         else:
             os.remove(self.path_as_active)
 
-    def get_internal_files(self):
+    def get_own_files_with_relative_paths(self):
 
         """
-        Loops over the files the mod contains.
+        Loops over the files the mod contains with their relative paths.
         The mod must be unpacked.
         """
 
@@ -126,42 +125,30 @@ class Mod:
                                     "file")
         else:
             return tuple((
-                files for (_, _, files_lists) in os.walk(self.path)
-                for files in files_lists
+                path_join(parent.strip(self.path_as_dir), internal_file)
+                for (parent, _, files_lists) in os.walk(self.path_as_dir)
+                for internal_file in files_lists
             ))
 
     def works_in_sv_pure(self):
 
-        # NOTE: This method is confusing compared to the other ones, improve
-        # it as soon as possible. Also, create another method called
-        # "get_internal_dirs".
-
         """
-        Checks if the mod's internal files' paths are in the blacklisted
-        sv_pure paths.
+        Checks if the sv_pure blacklisted paths are somewhere in the mod's
+        internal files' paths.
         """
 
         if self.is_packed():
             raise IsPackedException("Cannot check if the mod works in sv_pure "
                                     "while packed")
-        blacklisted_dirs = (
-            f"materials{dir_sep}console",
-            f"materials{dir_sep}temp",
-            f"materials{dir_sep}vgui{dir_sep}logos{dir_sep}ui",
-            f"sound{dir_sep}misc",
-            f"sound{dir_sep}vo",
-            f"sound{dir_sep}ui",
-        )
 
-        mod_subdirs = tuple((
-            parent for (parent, _, _) in
-            os.walk(self.path_as_dir)
-        ))
-
-        for bl_dir in blacklisted_dirs:
-            for mod_subdir in mod_subdirs:
-                if bl_dir in mod_subdir:
-                    return False
+        for file_path in self.get_own_files_with_relative_paths():
+            if path_join("materials", "console") in file_path\
+              or path_join("materials", "temp") in file_path\
+              or path_join("materials", "vgui", "logos", "ui") in file_path\
+              or path_join("sound", "misc") in file_path\
+              or path_join("sound", "vo") in file_path\
+              or path_join("sound", "ui") in file_path:
+                return False
         else:
             return True
 
@@ -179,8 +166,9 @@ class Mod:
             raise IsPackedException("One or both mods are packed")
         else:
             conflicting_files = tuple((
-                filename for filename in self.get_internal_files()
-                if filename in other_mod.get_internal_files()
+                file_path
+                for file_path in self.get_own_files_with_relative_paths()
+                if file_path in other_mod.get_own_files_with_relative_paths()
             ))
         if conflicting_files:
             return True
@@ -190,7 +178,7 @@ class Mod:
     def merge_with(self, other_mod):
 
         """
-        Copies the other mod's directories to the current mod.
+        Copies the other mod's directories (trees) to the current mod.
         Both mods must be unpacked.
         """
 
@@ -202,9 +190,14 @@ class Mod:
         elif self.conflicts_with(other_mod):
             raise ConflictsWithModException("The mods share one or more "
                                             "files")
-        else:
-            for (parent, _, _) in os.walk(other_mod.path_as_dir):
-                shutil.copytree(parent, self.path_as_dir)
+        for tree in tuple((
+            name for name in os.listdir(other_mod.path_as_dir)
+            if is_dir(path_join(other_mod.path_as_dir, name))
+        )):
+            shutil.copytree(
+                path_join(other_mod.path_as_dir, tree),
+                path_join(self.path_as_dir, tree)
+            )
 
 
 class IsPackedException(Exception):
